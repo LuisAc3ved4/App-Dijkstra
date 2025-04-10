@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Dijkstra Visualizador</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f3f4f6;
+      margin: 0;
+      padding: 40px;
+      color: #333;
+    }
+
+    h2 {
+      text-align: center;
+      color: #1f2937;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: auto;
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+    }
+
+    label {
+      font-weight: bold;
+      margin-right: 8px;
+    }
+
+    input {
+      padding: 8px;
+      margin: 5px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      width: 100px;
+    }
+
+    button {
+      padding: 8px 12px;
+      margin: 10px 5px;
+      background-color: #3b82f6;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #2563eb;
+    }
+
+    #output {
+      background: #f9fafb;
+      padding: 15px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      white-space: pre-wrap;
+      margin-top: 20px;
+    }
+
+    #graph img {
+      max-width: 100%;
+      margin-top: 20px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 15px;
+      align-items: center;
+    }
+
+    @media (max-width: 600px) {
+      .row {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      input {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Visualizador del Algoritmo de Dijkstra</h2>
+
+    <div class="row">
+      <label>Origen:</label><input type="text" id="start">
+      <label>Destino:</label><input type="text" id="end">
+    </div>
+
+    <div class="row">
+      <label>Desde:</label><input type="text" id="from">
+      <label>Hacia:</label><input type="text" id="to">
+      <label>Cantidad:</label><input type="number" id="weight">
+      <button onclick="addEdge()">Agregar Arista</button>
+    </div>
+
+    <button onclick="sendData()">Calcular Ruta más corta</button>
+
+    <div id="output"></div>
+
+    <div id="graph">
+      <img id="graphImg" src="">
+    </div>
+  </div>
+
+  <script>
+    let graph = {};
+
+    function addEdge() {
+      const from = document.getElementById('from').value;
+      const to = document.getElementById('to').value;
+      const weight = parseInt(document.getElementById('weight').value);
+
+      if (!from || !to || isNaN(weight)) {
+        alert("Por favor completa todos los campos correctamente.");
+        return;
+      }
+
+      if (!graph[from]) graph[from] = [];
+      graph[from].push([to, weight]);
+      if (!graph[to]) graph[to] = [];
+
+      alert(`Agregado: ${from} → ${to} (${weight})`);
+    }
+
+    async function sendData() {
+      const start = document.getElementById('start').value;
+      const end = document.getElementById('end').value;
+
+      if (!start || !end) {
+        alert("Por favor ingresa los nodos de origen y destino.");
+        return;
+      }
+
+      const res = await fetch('/dijkstra', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ graph, start, end })
+      });
+
+      const data = await res.json();
+      document.getElementById('output').textContent =
+        `🔍 Distancias mínimas:\n${JSON.stringify(data.distances, null, 2)}\n\n` +
+        `✅ Camino más corto:\n${data.path.join(" → ")}`;
+
+      document.getElementById('graphImg').src = data.image + '?t=' + new Date().getTime();
+    }
+  </script>
+</body>
+</html>
